@@ -4,15 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"newstrix/internal/embedding"
 	"newstrix/internal/fetch/sources"
 )
 
 type Fetcher struct {
-	sources []sources.Source
+	sources  []sources.Source
+	embedder *embedding.Embedder
 }
 
-func NewFetcher(s []sources.Source) *Fetcher {
-	return &Fetcher{sources: s}
+func NewFetcher(s []sources.Source, e *embedding.Embedder) *Fetcher {
+	return &Fetcher{
+		sources:  s,
+		embedder: e,
+	}
 }
 
 func (f *Fetcher) Run(ctx context.Context) error {
@@ -29,8 +34,14 @@ func (f *Fetcher) Run(ctx context.Context) error {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				fmt.Printf("→ %s [%s]\n", item.Title, item.Publisher)
-				// TODO: отправить в БД / векторизатор
+				//fmt.Printf("→ %s [%s]\n", item.Title, item.Publisher)
+				vector, err := f.embedder.Vectorize(item.Title + " " + item.Description) //+ " " + item.FullText)
+				if err != nil {
+					fmt.Printf("Ошибка векторизации: %v\n", err)
+					continue
+				}
+				fmt.Println(vector)
+				// TODO: отправить в БД 
 			}
 		}
 	}

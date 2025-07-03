@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"log"
+	"newstrix/internal/embedding"
 	"newstrix/internal/fetch"
 	"newstrix/internal/fetch/sources"
 	"os"
@@ -27,11 +29,17 @@ func main() {
 
 	srcs := []sources.Source{
 		sources.NewLenta(),
-		//sources.NewInterfax(),
+		sources.NewRia(),
+		sources.NewTass(),
 		// sources.NewMeduza(), и т.д.
 	}
 
-	f := fetch.NewFetcher(srcs)
+	embedder, err := embedding.NewEmbedder("localhost:50051")
+	if err != nil {
+		log.Fatalf("Ошибка подключения к embed-сервису: %v", err)
+	}
+
+	f := fetch.NewFetcher(srcs, embedder)
 	if err := f.Run(ctx); err != nil {
 		panic(err)
 	}

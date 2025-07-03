@@ -5,21 +5,21 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-type Lenta struct {
+type Ria struct {
 	parser *gofeed.Parser
 }
 
-func NewLenta() *Lenta {
-	return &Lenta{parser: gofeed.NewParser()}
+func NewRia() *Ria {
+	return &Ria{parser: gofeed.NewParser()}
 }
 
-func (l *Lenta) Name() string {
-	return "Lenta.ru"
+func (l *Ria) Name() string {
+	return "Ria.ru"
 }
 
-func (l *Lenta) Fetch(ctx context.Context) ([]NewsItem, error) {
+func (l *Ria) Fetch(ctx context.Context) ([]NewsItem, error) {
 
-	feed, err := l.parser.ParseURLWithContext("https://lenta.ru/rss/news", ctx)
+	feed, err := l.parser.ParseURLWithContext("https://ria.ru/export/rss2/archive/index.xml", ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (l *Lenta) Fetch(ctx context.Context) ([]NewsItem, error) {
 			Link:        entry.Link,
 			Description: entry.Description,
 			PublishedAt: entry.Published,
-			Publisher:   "Lenta.ru",
+			Publisher:   "Ria.ru",
 		})
 	}
 

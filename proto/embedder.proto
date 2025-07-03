@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package embedding;
+
+option go_package = "newstrix/internal/embedding/pb";
+
+service Embedder {
+  rpc Embed (EmbedRequest) returns (EmbedResponse);
+}
+
+message EmbedRequest {
+  string text = 1;
+}
+
+message EmbedResponse {
+  repeated float vector = 1;
+}

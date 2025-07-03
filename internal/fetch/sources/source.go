@@ -8,6 +8,7 @@ type Source interface {
 }
 
 type NewsItem struct {
+	Guid        string
 	Title       string
 	Link        string
 	Description string
