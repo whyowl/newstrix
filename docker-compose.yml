@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: newstrix-postgres
+    environment:
+      POSTGRES_USER: news
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: newsdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U news"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: newstrix-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  migrate:
+    image: migrate/migrate
+    container_name: newstrix-migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./internal/db/migrations:/migrations
+    entrypoint:
+      - migrate
+      - -path=/migrations
+      - -database=postgres://news:password@db:5432/newsdb?sslmode=disable
+      - up
+    restart: on-failure
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: newstrix-api
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: postgres://news:password@db:5432/newsdb?sslmode=disable
+      REDIS_ADDR: redis:6379
+
+  fetcher:
+    build:
+      context: .
+      dockerfile: Dockerfile.fetcher
+    container_name: newstrix-fetcher
+    depends_on:
+      - db
+    environment:
+      DB_URL: postgres://news:password@db:5432/newsdb?sslmode=disable
+
+volumes:
+  pgdata:
+  redisdata:
