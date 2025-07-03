@@ -19,17 +19,9 @@ clean:
 	@rm -f $(OUT_DIR)/proto/*.pb.go
 	@echo "Cleaned."
 
-up:
-	@echo "Starting containers..."
-	@docker compose up -d --build
-
-down:
-	@echo "Stopping containers..."
-	@docker compose down
-
 migrate-up:
 	@docker run --rm \
-		-v $(shell pwd)/internal/db/migrations:/migrations \
+		-v ${CURDIR}/internal/db/migrations:/migrations \
 		--network host \
 		migrate/migrate \
 		-path=/migrations \
@@ -38,7 +30,7 @@ migrate-up:
 
 migrate-down:
 	@docker run --rm \
-		-v $(shell pwd)/internal/db/migrations:/migrations \
+		-v ${CURDIR}/internal/db/migrations:/migrations \
 		--network host \
 		migrate/migrate \
 		-path=/migrations \
@@ -54,7 +46,27 @@ api:
 fetcher:
 	@go run ./cmd/fetcher
 
-dev: up migrate-up
-	@echo "Starting API and Fetcher..."
-	@go run ./cmd/api & \
-	go run ./cmd/fetcher
+# --- DEV MODE ---
+dev-up:
+	@echo "Run dev-environment..."
+	@docker compose -f docker-compose.dev.yml up -d --build
+
+dev-down:
+	@echo "Stop dev-environment..."
+	@docker compose -f docker-compose.dev.yml down
+
+dev:
+	@$(MAKE) dev-up
+	@$(MAKE) migrate-up
+	@echo "Run API and fetcher local..."
+	@go run ./cmd/fetcher #& \
+	#go run ./cmd/api
+
+# --- PROD MODE ---
+prod-up:
+	@echo "Run whole project in Docker (prod)..."
+	@docker compose -f docker-compose.yml up -d --build
+
+prod-down:
+	@echo "Stop prod-environment..."
+	@docker compose -f docker-compose.yml down
