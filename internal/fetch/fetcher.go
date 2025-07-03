@@ -35,13 +35,13 @@ func (f *Fetcher) Run(ctx context.Context) error {
 				return ctx.Err()
 			default:
 				//fmt.Printf("→ %s [%s]\n", item.Title, item.Publisher)
-				vector, err := f.embedder.Vectorize(item.Title + " " + item.Description) //+ " " + item.FullText)
+				vector, err := f.embedder.Vectorize(ctx, item.Title+" "+item.Description) //+ " " + item.FullText)
 				if err != nil {
-					fmt.Printf("Ошибка векторизации: %v\n", err)
+					fmt.Printf("Error vectorize: %v\n", err) // TODO обработка ошибок
 					continue
 				}
 				fmt.Println(vector)
-				// TODO: отправить в БД 
+				// TODO: отправить в БД
 			}
 		}
 	}

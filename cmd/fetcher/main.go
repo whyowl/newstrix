@@ -16,7 +16,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	// Отлов сигнала Ctrl+C
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
@@ -25,7 +24,7 @@ func main() {
 		cancel()
 	}()
 
-	//cfg := config.Load()
+	//cfg := config.Load() //TODO config
 
 	srcs := []sources.Source{
 		sources.NewLenta(),
