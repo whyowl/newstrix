@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
+	"newstrix/internal/config"
 	"newstrix/internal/embedding"
 	"newstrix/internal/fetch"
 	"newstrix/internal/fetch/sources"
@@ -28,7 +29,7 @@ func main() {
 		cancel()
 	}()
 
-	//cfg := config.Load() //TODO config
+	cfg := config.Load()
 
 	srcs := []models.Source{
 		sources.NewLenta(),
@@ -37,12 +38,12 @@ func main() {
 		// TODO sources.NewMeduza(), и т.д.
 	}
 
-	embedder, err := embedding.NewEmbedder("localhost:50051")
+	embedder, err := embedding.NewEmbedder(cfg.EmbedderURL)
 	if err != nil {
 		log.Fatalf("error connect to embed-service: %v", err) // TODO test try
 	}
 
-	pool, err := pgxpool.Connect(ctx, "postgres://news:password@localhost:5432/newsdb?sslmode=disable") // TODO config
+	pool, err := pgxpool.Connect(ctx, cfg.PostgresURL)
 	if err != nil {
 		log.Fatal(err)
 	}

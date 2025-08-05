@@ -7,16 +7,29 @@ import (
 )
 
 type Config struct {
+	EmbedderURL string
+	PostgresURL string
+	GrpcAddress string
+	OllamaURL   string
+	OllamaModel string
 }
 
-func Load() Config {
+func Load() *Config {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 	var AppConfig Config
 
+	AppConfig = Config{
+		EmbedderURL: getEnv("EMBEDDER_URL", "localhost:50051"),
+		PostgresURL: getEnv("POSTGRES_URL", "postgres://news:password@localhost:5432/newsdb?sslmode=disable"),
+		GrpcAddress: getEnv("GRPC_ADDRESS", ":50051"),
+		OllamaURL:   getEnv("OLLAMA_URL", "http://localhost:11434"),
+		OllamaModel: getEnv("OLLAMA_MODEL", "nomic-embed-text:v1.5"),
+	}
+
 	log.Println("Config loaded")
-	return AppConfig
+	return &AppConfig
 }
 
 func getEnv(key, fallback string) string {

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"newstrix/internal/config"
 	"newstrix/internal/embedding"
 
 	"context"
@@ -24,12 +25,15 @@ func (s *server) Embed(ctx context.Context, req *pb.EmbedRequest) (*pb.EmbedResp
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
+
+	cfg := config.Load()
+
+	lis, err := net.Listen("tcp", cfg.GrpcAddress)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	ollamaClnt := embedding.NewOllamaClient("http://localhost:11434", "nomic-embed-text:v1.5")
+	ollamaClnt := embedding.NewOllamaClient(cfg.OllamaURL, cfg.OllamaModel)
 
 	grpcServer := grpc.NewServer()
 	s := &server{
@@ -37,7 +41,7 @@ func main() {
 	}
 	pb.RegisterEmbedderServer(grpcServer, s)
 
-	log.Println("Embedder gRPC server running on :50051")
+	log.Printf("Embedder gRPC server running on %s \n", cfg.GrpcAddress)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
