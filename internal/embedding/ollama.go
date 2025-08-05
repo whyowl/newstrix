@@ -21,8 +21,8 @@ type ollamaEmbedRequest struct {
 }
 
 type ollamaEmbedResponse struct {
-	Model      string    `json:"model"`
-	Embeddings []float32 `json:"embeddings"`
+	Model      string      `json:"model"`
+	Embeddings [][]float32 `json:"embeddings"`
 }
 
 func NewOllamaClient(url string, model string) *OllamaClient {
@@ -51,7 +51,7 @@ func (c *OllamaClient) Embed(ctx context.Context, input string) ([]float32, erro
 		return []float32{}, fmt.Errorf("error decoding response: %v, body: %s", err, string(respBytes))
 	}
 
-	return respObj.Embeddings, nil // need check error from server
+	return respObj.Embeddings[0], nil // TODO need check error from server
 }
 
 func (c *OllamaClient) sendRequest(ctx context.Context, url string, body []byte) ([]byte, error) {

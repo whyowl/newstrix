@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"newstrix/internal/embedding"
 	"newstrix/internal/fetch"
 	"newstrix/internal/fetch/sources"
+	"newstrix/internal/models"
+	"newstrix/internal/storage"
+	"newstrix/internal/storage/postgres"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,20 +30,32 @@ func main() {
 
 	//cfg := config.Load() //TODO config
 
-	srcs := []sources.Source{
+	srcs := []models.Source{
 		sources.NewLenta(),
 		sources.NewRia(),
 		sources.NewTass(),
-		// sources.NewMeduza(), и т.д.
+		// TODO sources.NewMeduza(), и т.д.
 	}
 
 	embedder, err := embedding.NewEmbedder("localhost:50051")
 	if err != nil {
-		log.Fatalf("Ошибка подключения к embed-сервису: %v", err)
+		log.Fatalf("error connect to embed-service: %v", err) // TODO test try
 	}
 
-	f := fetch.NewFetcher(srcs, embedder)
+	pool, err := pgxpool.Connect(ctx, "postgres://news:password@localhost:5432/newsdb?sslmode=disable") // TODO config
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.Close()
+
+	storageFacade := storage.NewStorageFacade(newStorage(pool))
+
+	f := fetch.NewFetcher(srcs, embedder, storageFacade)
 	if err := f.Run(ctx); err != nil {
 		panic(err)
 	}
+}
+
+func newStorage(pool *pgxpool.Pool) *postgres.PgRepository {
+	return postgres.NewPgRepository(*postgres.NewTxManager(pool))
 }

@@ -26,21 +26,6 @@ services:
     volumes:
       - redisdata:/data
 
-  migrate:
-    image: migrate/migrate
-    container_name: newstrix-migrate
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - ./internal/db/migrations:/migrations
-    entrypoint:
-      - migrate
-      - -path=/migrations
-      - -database=postgres://news:password@db:5432/newsdb?sslmode=disable
-      - up
-    restart: on-failure
-
 volumes:
   pgdata:
   redisdata:

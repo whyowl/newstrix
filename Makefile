@@ -19,26 +19,20 @@ clean:
 	@rm -f $(OUT_DIR)/proto/*.pb.go
 	@echo "Cleaned."
 
-migrate-up:
-	@docker run --rm \
-		-v ${CURDIR}/internal/db/migrations:/migrations \
-		--network host \
-		migrate/migrate \
-		-path=/migrations \
-		-database "$(DB_URL)" \
-		up
+goose-install:
+	@go install github.com/pressly/goose/v3/cmd/goose@latest
 
-migrate-down:
-	@docker run --rm \
-		-v ${CURDIR}/internal/db/migrations:/migrations \
-		--network host \
-		migrate/migrate \
-		-path=/migrations \
-		-database "$(DB_URL)" \
-		down
+goose-add:
+	goose -dir ./migrations postgres "$(DB_URL)" create rename_me sql
 
-create-migration:
-	@migrate create -ext sql -dir internal/db/migrations -seq $(name)
+goose-up:
+	goose -dir ./migrations postgres "$(DB_URL)" up
+
+goose-down:
+	goose -dir ./migrations postgres "$(DB_URL)" down
+
+goose-status:
+	goose -dir ./migrations postgres "$(DB_URL)" status
 
 api:
 	@go run ./cmd/api
@@ -57,9 +51,9 @@ dev-down:
 
 dev:
 	@$(MAKE) dev-up
-	@$(MAKE) migrate-up
-	@echo "Run API and fetcher local..."
-	@go run ./cmd/fetcher #& \
+	#@$(MAKE) migrate-up
+	#@echo "Run API and fetcher local..."
+	#@go run ./cmd/fetcher #& \
 	#go run ./cmd/api
 
 # --- PROD MODE ---

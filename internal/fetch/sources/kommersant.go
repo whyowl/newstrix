@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"github.com/mmcdole/gofeed"
+	"newstrix/internal/models"
 )
 
 type Kommersant struct {
@@ -17,16 +18,16 @@ func (l *Kommersant) Name() string {
 	return "Kommersant.ru"
 }
 
-func (l *Kommersant) Fetch(ctx context.Context) ([]NewsItem, error) {
+func (l *Kommersant) Fetch(ctx context.Context) ([]models.NewsItem, error) {
 
 	feed, err := l.parser.ParseURLWithContext("https://www.kommersant.ru/rss/corp.xml", ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var items []NewsItem
+	var items []models.NewsItem
 	for _, entry := range feed.Items {
-		items = append(items, NewsItem{
+		items = append(items, models.NewsItem{
 			Title:       entry.Title,
 			Link:        entry.Link,
 			Description: entry.Description,

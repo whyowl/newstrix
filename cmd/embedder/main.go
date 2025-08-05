@@ -18,7 +18,7 @@ type server struct {
 func (s *server) Embed(ctx context.Context, req *pb.EmbedRequest) (*pb.EmbedResponse, error) {
 	vector, err := s.ollama.Embed(ctx, req.Text)
 	if err != nil {
-		return nil, err
+		return nil, err // TODO hide error to out format
 	}
 	return &pb.EmbedResponse{Vector: vector}, nil
 }

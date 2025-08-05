@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"github.com/mmcdole/gofeed"
+	"newstrix/internal/models"
 )
 
 type Ria struct {
@@ -17,16 +18,16 @@ func (l *Ria) Name() string {
 	return "Ria.ru"
 }
 
-func (l *Ria) Fetch(ctx context.Context) ([]NewsItem, error) {
+func (l *Ria) Fetch(ctx context.Context) ([]models.NewsItem, error) {
 
 	feed, err := l.parser.ParseURLWithContext("https://ria.ru/export/rss2/archive/index.xml", ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var items []NewsItem
+	var items []models.NewsItem
 	for _, entry := range feed.Items {
-		items = append(items, NewsItem{
+		items = append(items, models.NewsItem{
 			Guid:        entry.GUID,
 			Title:       entry.Title,
 			Link:        entry.Link,
