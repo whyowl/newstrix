@@ -48,7 +48,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	storageFacade := storage.NewStorageFacade(newStorage(pool))
+	storageFacade := newStorageFacade(pool)
 
 	f := fetch.NewFetcher(srcs, embedder, storageFacade)
 	if err := f.Run(ctx); err != nil {
@@ -56,6 +56,9 @@ func main() {
 	}
 }
 
-func newStorage(pool *pgxpool.Pool) *postgres.PgRepository {
-	return postgres.NewPgRepository(*postgres.NewTxManager(pool))
+func newStorageFacade(pool *pgxpool.Pool) storage.Facade {
+	txManager := postgres.NewTxManager(pool)
+	pgRepository := postgres.NewPgRepository(txManager)
+
+	return storage.NewStorageFacade(txManager, pgRepository)
 }
