@@ -1,4 +1,5 @@
 -- +goose Up
+CREATE EXTENSION IF NOT EXISTS "vector";
 CREATE TABLE news (
                       id TEXT PRIMARY KEY,
                       title TEXT NOT NULL,
@@ -7,7 +8,7 @@ CREATE TABLE news (
                       full_text TEXT,
                       published_at TIMESTAMP,
                       publisher TEXT,
-                      vector FLOAT[]
+                      vector VECTOR(1024)
 );
 
 

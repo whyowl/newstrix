@@ -32,7 +32,7 @@ func (l *Tass) Fetch(ctx context.Context) ([]models.NewsItem, error) {
 			Title:       entry.Title,
 			Link:        entry.Link,
 			Description: entry.Description,
-			PublishedAt: entry.Published,
+			PublishedAt: parseTime(entry.Published),
 			Publisher:   "Tass.ru",
 		})
 	}

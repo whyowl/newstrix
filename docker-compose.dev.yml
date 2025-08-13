@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:16
+    image: ankane/pgvector:latest
     container_name: newstrix-postgres
     environment:
       POSTGRES_USER: news

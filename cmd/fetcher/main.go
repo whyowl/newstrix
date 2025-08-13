@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	sig := make(chan os.Signal, 1)
@@ -55,6 +55,7 @@ func main() {
 	if err := f.Run(ctx); err != nil {
 		panic(err)
 	}
+	<-ctx.Done()
 }
 
 func newStorageFacade(pool *pgxpool.Pool) storage.Facade {

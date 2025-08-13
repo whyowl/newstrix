@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/mmcdole/gofeed"
 	"newstrix/internal/models"
+	"time"
 )
 
 type Kommersant struct {
@@ -31,10 +32,18 @@ func (l *Kommersant) Fetch(ctx context.Context) ([]models.NewsItem, error) {
 			Title:       entry.Title,
 			Link:        entry.Link,
 			Description: entry.Description,
-			PublishedAt: entry.Published,
+			PublishedAt: parseTime(entry.Published),
 			Publisher:   "Kommersant.ru",
 		})
 	}
 
 	return items, nil
+}
+
+func parseTime(published string) time.Time {
+	parsedTime, err := time.Parse(time.RFC1123, published)
+	if err != nil {
+		return time.Time{} // Return zero value if parsing fails
+	}
+	return parsedTime
 }

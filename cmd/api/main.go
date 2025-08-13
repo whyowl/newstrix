@@ -1,19 +1,73 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"newstrix/internal/api"
 	"newstrix/internal/config"
+	"newstrix/internal/embedding"
+	"newstrix/internal/search"
+	"newstrix/internal/storage"
+	"newstrix/internal/storage/postgres"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sig
+		cancel()
+	}()
+
 	cfg := config.Load()
 
-	router := api.SetupRouter(cfg)
+	pool, err := pgxpool.Connect(ctx, cfg.PostgresURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.Close()
 
-	log.Printf("Starting API server at %s...", cfg.HTTPPort)
-	err := router.Run(":" + cfg.HTTPPort)
+	storageFacade := newStorageFacade(pool)
+
+	embedder, err := embedding.NewEmbedder(cfg.EmbedderURL)
+	if err != nil {
+		log.Fatalf("error connect to embed-service: %v", err)
+	}
+
+	//todo unit tests
+
+	searchEngine := search.NewSearchEngine(ctx, embedder, storageFacade)
+
+	result, err := searchEngine.SearchByKeywords(ctx, []string{"израиль"})
+	if err != nil {
+		log.Fatalf("search failed: %v", err)
+	}
+	for _, item := range result {
+		fmt.Printf("%s — %s.  %s\n", item.Title, item.Description, item.Publisher)
+	}
+
+	router := api.SetupRouter(searchEngine)
+
+	log.Printf("Starting API server at %s...", cfg.ApiAddress)
+	err = router.Run(cfg.ApiAddress)
 	if err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
+}
+
+func newStorageFacade(pool *pgxpool.Pool) storage.Facade {
+	txManager := postgres.NewTxManager(pool)
+	pgRepository := postgres.NewPgRepository(txManager)
+
+	return storage.NewStorageFacade(txManager, pgRepository)
 }

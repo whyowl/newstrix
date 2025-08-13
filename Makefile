@@ -51,10 +51,7 @@ dev-down:
 
 dev:
 	@$(MAKE) dev-up
-	#@$(MAKE) migrate-up
-	#@echo "Run API and fetcher local..."
-	#@go run ./cmd/fetcher #& \
-	#go run ./cmd/api
+
 
 # --- PROD MODE ---
 prod-up:

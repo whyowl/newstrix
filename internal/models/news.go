@@ -1,6 +1,9 @@
 package models
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type Source interface {
 	Name() string
@@ -12,7 +15,16 @@ type NewsItem struct {
 	Title       string    `db:"title"`
 	Link        string    `db:"link"`
 	Description string    `db:"description"`
-	PublishedAt string    `db:"published_at"`
+	PublishedAt time.Time `db:"published_at"`
 	Publisher   string    `db:"publisher"`
 	Vector      []float32 `db:"vector"`
+}
+
+type SearchParams struct {
+	Keywords *[]string
+	Vector   *[]float32
+	Source   *string
+	From     *time.Time
+	To       *time.Time
+	Limit    int
 }

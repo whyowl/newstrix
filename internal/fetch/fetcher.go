@@ -33,18 +33,17 @@ func (f *Fetcher) Run(ctx context.Context) error {
 			continue
 		}
 
-		for _, item := range items {
+		for index, _ := range items {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				if err = f.Vectorize(ctx, &item); err != nil {
+				if err = f.Vectorize(ctx, &items[index]); err != nil {
 					log.Printf("Error vectorize: %v\n", err) // TODO обработка ошибок
 					continue
 				}
 			}
 		}
-
 		if err := f.AddNews(ctx, items); err != nil {
 			log.Print(err) // TODO обработка ошибок
 			continue

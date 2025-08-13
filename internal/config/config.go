@@ -12,6 +12,7 @@ type Config struct {
 	GrpcAddress string
 	OllamaURL   string
 	OllamaModel string
+	ApiAddress  string
 }
 
 func Load() *Config {
@@ -25,7 +26,8 @@ func Load() *Config {
 		PostgresURL: getEnv("POSTGRES_URL", "postgres://news:password@localhost:5432/newsdb?sslmode=disable"),
 		GrpcAddress: getEnv("GRPC_ADDRESS", ":50051"),
 		OllamaURL:   getEnv("OLLAMA_URL", "http://localhost:11434"),
-		OllamaModel: getEnv("OLLAMA_MODEL", "nomic-embed-text:v1.5"),
+		OllamaModel: getEnv("OLLAMA_MODEL", "bge-m3:latest"),
+		ApiAddress:  getEnv("API_ADDRESS", ":8080"),
 	}
 
 	log.Println("Config loaded")
