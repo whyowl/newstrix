@@ -7,6 +7,7 @@ import (
 	"newstrix/internal/embedding"
 	"newstrix/internal/models"
 	"newstrix/internal/storage"
+	"time"
 )
 
 type Fetcher struct {
@@ -27,24 +28,36 @@ func (f *Fetcher) Run(ctx context.Context) error {
 
 	for _, source := range f.sources {
 		log.Printf("Parse %s...\n", source.Name())
-		items, err := source.Fetch(ctx)
+
+		lastParsed, err := f.storage.GetSourceLastParsed(ctx, source.Name())
+		if err != nil {
+			log.Printf("error get last parsed time for source %s: %v\n", source.Name(), err)
+			continue
+		}
+
+		items, err := source.Fetch(ctx, lastParsed)
 		if err != nil {
 			log.Printf("Error source %s: %v\n", source.Name(), err)
 			continue
 		}
 
-		for index, _ := range items {
+		for index, _ := range *items {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				if err = f.Vectorize(ctx, &items[index]); err != nil {
+				if err = f.Vectorize(ctx, &(*items)[index]); err != nil {
 					log.Printf("Error vectorize: %v\n", err) // TODO обработка ошибок
 					continue
 				}
+
 			}
 		}
-		if err := f.AddNews(ctx, items); err != nil {
+		if len(*items) == 0 {
+			log.Printf("No new items for source %s since %s\n", source.Name(), lastParsed)
+			continue
+		}
+		if err := f.AddNews(ctx, items, source.Name(), time.Now()); err != nil {
 			log.Print(err) // TODO обработка ошибок
 			continue
 		}
@@ -62,10 +75,10 @@ func (f *Fetcher) Vectorize(ctx context.Context, item *models.NewsItem) error {
 	return nil
 }
 
-func (f *Fetcher) AddNews(ctx context.Context, items []models.NewsItem) error {
-	if err := f.storage.AddNews(ctx, items); err != nil {
+func (f *Fetcher) AddNews(ctx context.Context, items *[]models.NewsItem, source string, lastParsed time.Time) error {
+	if err := f.storage.AddNews(ctx, items, source, lastParsed); err != nil {
 		return fmt.Errorf("error add news to storage: %w", err)
 	}
-	log.Printf("Added %d news items to storage", len(items))
+	log.Printf("Added %d news items to storage", len(*items))
 	return nil
 }

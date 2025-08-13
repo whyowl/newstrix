@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
 	"github.com/pgvector/pgvector-go"
 	"newstrix/internal/models"
 	"strings"
+	"time"
 )
 
 type PgRepository struct {
@@ -36,6 +38,19 @@ func (r *PgRepository) AddNews(ctx context.Context, news []models.NewsItem) erro
 	_, err := tx.Exec(ctx, query, values...)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r *PgRepository) UpdateSourceLastParsed(ctx context.Context, source string, lastParsed time.Time) error {
+
+	tx := r.txManager.GetQueryEngine(ctx)
+
+	query := "INSERT INTO source_last_parsed (source_id, last_parsed) VALUES ($1, $2) ON CONFLICT (source_id) DO UPDATE SET last_parsed = EXCLUDED.last_parsed"
+	_, err := tx.Exec(ctx, query, source, lastParsed)
+	if err != nil {
+		return fmt.Errorf("failed to update last parsed time for source %s: %w", source, err)
 	}
 
 	return nil
@@ -123,4 +138,19 @@ func (r *PgRepository) SearchByFilters(ctx context.Context, opt models.SearchPar
 	return items, nil
 }
 
-// TODO add another Get functions
+func (r *PgRepository) GetSourceLastParsed(ctx context.Context, source string) (time.Time, error) {
+	tx := r.txManager.GetQueryEngine(ctx)
+
+	query := "SELECT last_parsed FROM source_last_parsed WHERE source_id = $1"
+	row := tx.QueryRow(ctx, query, source)
+
+	var lastParsed time.Time
+	if err := row.Scan(&lastParsed); err != nil {
+		if err == pgx.ErrNoRows {
+			return time.Time{}, nil
+		}
+		return time.Time{}, fmt.Errorf("failed to get last parsed time for source %s: %w", source, err)
+	}
+
+	return lastParsed, nil
+}

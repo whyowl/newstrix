@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
+	"newstrix/internal/api/handler"
 	"newstrix/internal/search"
 )
 
@@ -20,6 +21,13 @@ func SetupRouter(engine *search.SearchEngine) *Router {
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
+	})
+
+	r.Route("/search", func(r chi.Router) {
+		sh := handler.NewSearchHandler(engine)
+		r.Get("/semantic", sh.SemanticSearch)
+		//r.Get("/date", sh.SearchByDate)
+		//r.Get("/{id}", sh.GetByID)
 	})
 
 	return &Router{r: r}

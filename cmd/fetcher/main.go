@@ -55,7 +55,6 @@ func main() {
 	if err := f.Run(ctx); err != nil {
 		panic(err)
 	}
-	<-ctx.Done()
 }
 
 func newStorageFacade(pool *pgxpool.Pool) storage.Facade {

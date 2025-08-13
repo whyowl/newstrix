@@ -19,7 +19,7 @@ func (l *Kommersant) Name() string {
 	return "Kommersant.ru"
 }
 
-func (l *Kommersant) Fetch(ctx context.Context) ([]models.NewsItem, error) {
+func (l *Kommersant) Fetch(ctx context.Context, timeline time.Time) ([]models.NewsItem, error) {
 
 	feed, err := l.parser.ParseURLWithContext("https://www.kommersant.ru/rss/corp.xml", ctx)
 	if err != nil {
@@ -28,22 +28,16 @@ func (l *Kommersant) Fetch(ctx context.Context) ([]models.NewsItem, error) {
 
 	var items []models.NewsItem
 	for _, entry := range feed.Items {
-		items = append(items, models.NewsItem{
-			Title:       entry.Title,
-			Link:        entry.Link,
-			Description: entry.Description,
-			PublishedAt: parseTime(entry.Published),
-			Publisher:   "Kommersant.ru",
-		})
+		if entry.PublishedParsed.After(timeline) || entry.PublishedParsed.Equal(timeline) {
+			items = append(items, models.NewsItem{
+				Title:       entry.Title,
+				Link:        entry.Link,
+				Description: entry.Description,
+				PublishedAt: *entry.PublishedParsed,
+				Publisher:   "Kommersant.ru",
+			})
+		}
 	}
 
 	return items, nil
-}
-
-func parseTime(published string) time.Time {
-	parsedTime, err := time.Parse(time.RFC1123, published)
-	if err != nil {
-		return time.Time{} // Return zero value if parsing fails
-	}
-	return parsedTime
 }

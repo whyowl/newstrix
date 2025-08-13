@@ -7,17 +7,17 @@ import (
 
 type Source interface {
 	Name() string
-	Fetch(ctx context.Context) ([]NewsItem, error)
+	Fetch(ctx context.Context, timeline time.Time) (*[]NewsItem, error)
 }
 
 type NewsItem struct {
-	Guid        string    `db:"id"`
-	Title       string    `db:"title"`
-	Link        string    `db:"link"`
-	Description string    `db:"description"`
-	PublishedAt time.Time `db:"published_at"`
-	Publisher   string    `db:"publisher"`
-	Vector      []float32 `db:"vector"`
+	Guid        string    `json:"id"`
+	Title       string    `json:"title"`
+	Link        string    `json:"link"`
+	Description string    `json:"description"`
+	PublishedAt time.Time `json:"published_at"`
+	Publisher   string    `json:"publisher"`
+	Vector      []float32 `json:"-"`
 }
 
 type SearchParams struct {

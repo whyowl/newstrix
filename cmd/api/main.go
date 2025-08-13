@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"newstrix/internal/api"
@@ -47,14 +46,6 @@ func main() {
 	//todo unit tests
 
 	searchEngine := search.NewSearchEngine(ctx, embedder, storageFacade)
-
-	result, err := searchEngine.SearchByKeywords(ctx, []string{"израиль"})
-	if err != nil {
-		log.Fatalf("search failed: %v", err)
-	}
-	for _, item := range result {
-		fmt.Printf("%s — %s.  %s\n", item.Title, item.Description, item.Publisher)
-	}
 
 	router := api.SetupRouter(searchEngine)
 
