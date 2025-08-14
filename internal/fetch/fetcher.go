@@ -66,6 +66,21 @@ func (f *Fetcher) Run(ctx context.Context) error {
 	return nil
 }
 
+func (f *Fetcher) Start(ctx context.Context, interval time.Duration) error {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			if err := f.Run(ctx); err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
 func (f *Fetcher) Vectorize(ctx context.Context, item *models.NewsItem) error {
 	vector, err := f.embedder.Vectorize(ctx, item.Title+" "+item.Description)
 	if err != nil {

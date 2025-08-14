@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	sig := make(chan os.Signal, 1)
@@ -52,9 +52,21 @@ func main() {
 	storageFacade := newStorageFacade(pool)
 
 	f := fetch.NewFetcher(srcs, embedder, storageFacade)
-	if err := f.Run(ctx); err != nil {
-		panic(err)
-	}
+
+	go func() {
+		log.Printf("Starting Fetcher with interval %s...", cfg.FetchInterval)
+		err := f.Start(ctx, cfg.FetchInterval)
+		if err != nil {
+			log.Fatalf("Fetcher failed: %v", err)
+		} else {
+			log.Println("Fetcher stopped gracefully")
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("Received termination signal, shutting down...")
+	time.Sleep(10 * time.Second) // Give some time for fetcher to finish current tasks
+
 }
 
 func newStorageFacade(pool *pgxpool.Pool) storage.Facade {
