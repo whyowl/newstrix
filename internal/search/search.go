@@ -12,7 +12,7 @@ const (
 	MaxLimit         = 100
 	MaxQueryLength   = 300
 	MaxSourceLength  = 100
-	DefaultDateRange = 7 * 24 * time.Hour
+	DefaultDateRange = 6 * time.Hour
 )
 
 type QueryOption struct {
@@ -99,14 +99,14 @@ func (s *SearchEngine) SearchBySemanticQuery(ctx context.Context, query string, 
 
 func (s *SearchEngine) SearchAdvanced(ctx context.Context, params QueryOption) ([]models.NewsItem, error) {
 
-	var request models.SearchParams
-
 	if params.Query == nil && params.Source == nil && params.From == nil && params.To == nil && params.Keywords == nil {
 		return nil, fmt.Errorf("at least one search parameter must be provided")
 	}
 
-	if len(*params.Source) > MaxSourceLength {
-		return nil, fmt.Errorf("source name too long")
+	if params.Source != nil {
+		if len(*params.Source) > MaxSourceLength {
+			return nil, fmt.Errorf("source name too long")
+		}
 	}
 
 	if params.From != nil && params.To != nil && params.From.After(*params.To) {
@@ -114,19 +114,19 @@ func (s *SearchEngine) SearchAdvanced(ctx context.Context, params QueryOption) (
 	}
 
 	if params.Limit <= 0 {
-		request.Limit = DefaultLimit
+		params.Limit = DefaultLimit
 	}
 	if params.Limit > 100 {
-		request.Limit = MaxLimit
+		params.Limit = MaxLimit
 	}
 
 	if params.From == nil && params.To != nil {
 		from := params.To.Add(-DefaultDateRange)
-		request.From = &from
+		params.From = &from
 	}
 	if params.From != nil && params.To == nil {
 		to := time.Now()
-		request.To = &to
+		params.To = &to
 	}
 
 	if params.Query != nil {
@@ -134,7 +134,16 @@ func (s *SearchEngine) SearchAdvanced(ctx context.Context, params QueryOption) (
 		if err != nil {
 			return nil, fmt.Errorf("error vectorizing query: %w", err)
 		}
-		request.Vector = &vec
+		params.Vector = &vec
+	}
+
+	var request = models.SearchParams{
+		Keywords: params.Keywords,
+		Vector:   params.Vector,
+		Source:   params.Source,
+		From:     params.From,
+		To:       params.To,
+		Limit:    params.Limit,
 	}
 
 	return s.storage.SearchByFilters(ctx, request)

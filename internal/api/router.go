@@ -26,8 +26,8 @@ func SetupRouter(engine *search.SearchEngine) *Router {
 	r.Route("/search", func(r chi.Router) {
 		sh := handler.NewSearchHandler(engine)
 		r.Get("/semantic", sh.SemanticSearch)
-		//r.Get("/date", sh.SearchByDate)
-		//r.Get("/{id}", sh.GetByID)
+		r.Get("/", sh.SearchByFilters)
+		r.Get("/{id}", sh.GetByID)
 	})
 
 	return &Router{r: r}

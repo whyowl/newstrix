@@ -74,7 +74,6 @@ func (r *PgRepository) GetByID(ctx context.Context, id string) (*models.NewsItem
 
 func (r *PgRepository) SearchByFilters(ctx context.Context, opt models.SearchParams) ([]models.NewsItem, error) {
 	tx := r.txManager.GetQueryEngine(ctx)
-
 	qb := sq.Select("id", "title", "link", "description", "published_at", "publisher", "vector").
 		From("news").
 		Limit(uint64(opt.Limit)).

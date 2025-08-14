@@ -43,8 +43,6 @@ func main() {
 		log.Fatalf("error connect to embed-service: %v", err)
 	}
 
-	//todo unit tests
-
 	searchEngine := search.NewSearchEngine(ctx, embedder, storageFacade)
 
 	router := api.SetupRouter(searchEngine)
