@@ -2,6 +2,9 @@ package fetch
 
 import (
 	"context"
+	"newstrix/internal/embedding"
+	"newstrix/internal/models"
+	"newstrix/internal/storage"
 	"testing"
 	"time"
 )
@@ -9,43 +12,39 @@ import (
 func TestFetcherBatching(t *testing.T) {
 	// This is a basic test to ensure the fetcher structure is correct
 	// In a real implementation, you'd want to mock the dependencies
-	
+
 	t.Run("NewFetcher creates fetcher with correct configuration", func(t *testing.T) {
 		sources := []models.Source{} // Empty for test
 		var embedder *embedding.Embedder
-		var storage storage.Facade
-		
-		fetcher := NewFetcher(sources, embedder, storage, 5, 50)
-		
+		var facade storage.Facade
+
+		fetcher := NewFetcher(sources, embedder, facade, 5)
+
 		if fetcher.maxWorkers != 5 {
 			t.Errorf("Expected maxWorkers to be 5, got %d", fetcher.maxWorkers)
 		}
-		
-		if fetcher.batchSize != 50 {
-			t.Errorf("Expected batchSize to be 50, got %d", fetcher.batchSize)
-		}
-		
+
 		if fetcher.stats.TotalSources != 0 {
 			t.Errorf("Expected TotalSources to be 0, got %d", fetcher.stats.TotalSources)
 		}
 	})
-	
+
 	t.Run("Fetcher stats are properly initialized", func(t *testing.T) {
 		sources := []models.Source{} // Empty for test
 		var embedder *embedding.Embedder
-		var storage storage.Facade
-		
-		fetcher := NewFetcher(sources, embedder, storage, 10, 100)
+		var facade storage.Facade
+
+		fetcher := NewFetcher(sources, embedder, facade, 10)
 		stats := fetcher.GetStats()
-		
+
 		if stats.TotalSources != 0 {
 			t.Errorf("Expected TotalSources to be 0, got %d", stats.TotalSources)
 		}
-		
+
 		if stats.SuccessfulFetch != 0 {
 			t.Errorf("Expected SuccessfulFetch to be 0, got %d", stats.SuccessfulFetch)
 		}
-		
+
 		if stats.FailedFetch != 0 {
 			t.Errorf("Expected FailedFetch to be 0, got %d", stats.FailedFetch)
 		}

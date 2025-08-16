@@ -116,7 +116,7 @@ func (s *SearchEngine) SearchAdvanced(ctx context.Context, params QueryOption) (
 	if params.Limit <= 0 {
 		params.Limit = DefaultLimit
 	}
-	if params.Limit > 100 {
+	if params.Limit > MaxLimit {
 		params.Limit = MaxLimit
 	}
 
@@ -137,7 +137,7 @@ func (s *SearchEngine) SearchAdvanced(ctx context.Context, params QueryOption) (
 		params.Vector = &vec
 	}
 
-	var request = models.SearchParams{
+	request := models.SearchParams{
 		Keywords: params.Keywords,
 		Vector:   params.Vector,
 		Source:   params.Source,
