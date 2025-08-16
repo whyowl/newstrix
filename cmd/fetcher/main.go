@@ -51,7 +51,7 @@ func main() {
 
 	storageFacade := newStorageFacade(pool)
 
-	f := fetch.NewFetcher(srcs, embedder, storageFacade)
+	f := fetch.NewFetcher(srcs, embedder, storageFacade, cfg.MaxWorkers)
 
 	go func() {
 		log.Printf("Starting Fetcher with interval %s...", cfg.FetchInterval)

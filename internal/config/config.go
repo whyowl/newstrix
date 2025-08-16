@@ -4,6 +4,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -15,6 +16,7 @@ type Config struct {
 	OllamaModel   string
 	ApiAddress    string
 	FetchInterval time.Duration
+	MaxWorkers    int
 }
 
 func Load() *Config {
@@ -38,6 +40,7 @@ func Load() *Config {
 			}
 			return duration
 		}(),
+		MaxWorkers: getEnvAsInt("MAX_WORKERS", 10),
 	}
 
 	log.Println("Config loaded")
@@ -47,6 +50,15 @@ func Load() *Config {
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return fallback
+}
+
+func getEnvAsInt(key string, fallback int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
 	}
 	return fallback
 }
