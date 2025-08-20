@@ -66,26 +66,21 @@ func (f *Fetcher) Run(ctx context.Context) error {
 	f.stats.FailedItems = 0
 	f.stats.mu.Unlock()
 
-	// Create channels for coordination
 	sourceResults := make(chan FetchResult, len(f.sources))
-
-	// Start source fetchers concurrently
+	
 	var wg sync.WaitGroup
 	for _, source := range f.sources {
 		wg.Add(1)
 		go f.fetchSource(ctx, source, sourceResults, &wg)
 	}
 
-	// Close source results channel when all fetchers complete
 	go func() {
 		wg.Wait()
 		close(sourceResults)
 	}()
 
-	// Process and store results
 	err := f.processAndStore(ctx, sourceResults)
 
-	// Log final stats
 	duration := time.Since(startTime)
 	f.stats.mu.RLock()
 	log.Printf("Fetch completed in %v. Sources: %d/%d, Items: %d/%d, Vectorized: %d/%d",
@@ -141,11 +136,9 @@ func (f *Fetcher) fetchSource(ctx context.Context, source models.Source, results
 }
 
 func (f *Fetcher) processAndStore(ctx context.Context, sourceResults <-chan FetchResult) error {
-	// Create a map to batch items by source
 	sourceBatches := make(map[string][]models.NewsItem)
 	var mu sync.Mutex
 
-	// Process source results and collect items by source
 	for result := range sourceResults {
 		if result.Error != nil {
 			log.Printf("Source %s failed: %v", result.Source, result.Error)
@@ -156,7 +149,6 @@ func (f *Fetcher) processAndStore(ctx context.Context, sourceResults <-chan Fetc
 			continue
 		}
 
-		// Vectorize items for this source
 		vectorizedItems, err := f.vectorizeItems(ctx, result.Items)
 		if err != nil {
 			log.Printf("Failed to vectorize items for source %s: %v", result.Source, err)
@@ -166,7 +158,6 @@ func (f *Fetcher) processAndStore(ctx context.Context, sourceResults <-chan Fetc
 			continue
 		}
 
-		// Add vectorized items to batch
 		mu.Lock()
 		sourceBatches[result.Source] = append(sourceBatches[result.Source], vectorizedItems...)
 		mu.Unlock()
@@ -176,7 +167,6 @@ func (f *Fetcher) processAndStore(ctx context.Context, sourceResults <-chan Fetc
 		f.stats.mu.Unlock()
 	}
 
-	// Store all batches
 	return f.storeBatches(ctx, sourceBatches)
 }
 
@@ -185,7 +175,6 @@ func (f *Fetcher) vectorizeItems(ctx context.Context, items []models.NewsItem) (
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
-	// Process items concurrently with limited workers
 	semaphore := make(chan struct{}, f.maxWorkers)
 
 	for i := range items {
@@ -193,11 +182,9 @@ func (f *Fetcher) vectorizeItems(ctx context.Context, items []models.NewsItem) (
 		go func(item models.NewsItem) {
 			defer wg.Done()
 
-			// Acquire semaphore
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			// Vectorize item
 			if err := f.VectorizeWithRetry(ctx, &item, 3); err != nil {
 				log.Printf("Failed to vectorize item %s: %v", item.Guid, err)
 				f.stats.mu.Lock()
@@ -222,7 +209,6 @@ func (f *Fetcher) storeBatches(ctx context.Context, sourceBatches map[string][]m
 	var errors []error
 	var mu sync.Mutex
 
-	// Store each source batch concurrently
 	for source, items := range sourceBatches {
 		if len(items) == 0 {
 			continue
